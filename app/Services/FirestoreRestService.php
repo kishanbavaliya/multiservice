@@ -509,7 +509,7 @@ class FirestoreRestService
                     ],
                     'op' => 'EQUAL',
                     'value' => [
-                        'doubleValue' => $vehicleTypeId,
+                        'integerValue' => $vehicleTypeId,
                     ],
                 ],
             ];
@@ -554,7 +554,7 @@ class FirestoreRestService
                                 ],
                                 'op' => 'EQUAL',
                                 'value' => [
-                                    'doubleValue' => 0,
+                                    'integerValue' => 0,
                                 ],
                             ],
                         ],
@@ -564,19 +564,19 @@ class FirestoreRestService
             ];
         }
 
-        $baseUrl = "https://firestore.googleapis.com/v1/projects/" . setting("projectId", "") . "/databases/(default)/documents/:runQuery";
-        $response = Http::withToken($this->authToken)->post(
-            $baseUrl,
+       $baseUrl = "https://firestore.googleapis.com/v1/projects/" . setting("projectId", "") . "/databases/(default)/documents/:runQuery";
+$response = Http::withToken($this->authToken)->post(
+    $baseUrl,
             $params = [
-                'structuredQuery' => [
-                    'startAt' => [
-                        'values' => [
-                            [
-                                'stringValue' => $minLocGeoHash,
-                            ],
-                        ],
-                        'before' => false,
-                    ],
+        'structuredQuery' => [
+                    // 'startAt' => [
+                    //     'values' => [
+                    //         [
+                    //             'stringValue' => $minLocGeoHash,
+                    //         ],
+                    //     ],
+                    //     'before' => false,
+                    // ],
                     // 'endAt' => [
                     //     'values' => [
                     //         [
@@ -585,52 +585,52 @@ class FirestoreRestService
                     //     ],
                     //     'before' => true,
                     // ],
-                    'where' => [
-                        'compositeFilter' => [
-                            'op' => 'AND',
-                            'filters' => [
-                                [
-                                    'fieldFilter' => [
+            'where' => [
+                'compositeFilter' => [
+                    'op' => 'AND',
+                    'filters' => [
+                        [
+                            'fieldFilter' => [
                                         'field' => [
                                             'fieldPath' => 'free',
                                         ],
-                                        'op' => 'EQUAL',
+                                'op' => 'EQUAL',
                                         'value' => [
-                                            'doubleValue' => 1,
+                                            'integerValue' => 1,
                                         ],
-                                    ],
-                                ],
-                                [
-                                    'fieldFilter' => [
+                            ],
+                        ],
+                        [
+                            'fieldFilter' => [
                                         'field' => [
                                             'fieldPath' => 'online',
                                         ],
-                                        'op' => 'EQUAL',
+                                'op' => 'EQUAL',
                                         'value' => [
-                                            'doubleValue' => 1,
+                                            'integerValue' => 1,
                                         ],
-                                    ],
-                                ],
-                                //vehicleTypeFilter
-                                $vehicleTypeFilter
                             ],
                         ],
+                                //vehicleTypeFilter
+                                $vehicleTypeFilter
                     ],
-                    'orderBy' => [
+                ],
+            ],
+            'orderBy' => [
                         'field' => [
                             'fieldPath' => 'g.geohash',
                         ],
-                        'direction' => 'ASCENDING',
-                    ],
+                    'direction' => 'ASCENDING',
+                ],
                     'from' => [
                         0 => [
                             'collectionId' => 'drivers',
                         ],
                     ],
-                    'limit' => (int) $limitItems,
-                ],
-            ]
-        );
+            'limit' => (int) $limitItems,
+        ],
+    ]
+);
 
 
         //
