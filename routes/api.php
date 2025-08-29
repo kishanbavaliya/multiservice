@@ -63,6 +63,7 @@ use App\Http\Controllers\API\DocumentRequestController;
 use App\Http\Controllers\API\FavouriteVendorController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+use App\Http\Controllers\API\FavoriteLocationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -301,4 +302,8 @@ Route::group(['middleware' => ['auth:sanctum', "user.active.check"]], function (
         Route::get('/driver/payouts/report', [DriverReportController::class, 'payouts']);
         Route::get('/driver/earnings/report', [DriverReportController::class, 'earnings']);
     });
+
+    // Favorite Location
+    Route::apiResource('favorites', FavoriteLocationController::class);
+
 });

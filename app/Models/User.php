@@ -314,4 +314,10 @@ class User extends Authenticatable implements HasMedia
             'two_factor_recovery_codes' => encrypt(json_encode($this->generateRecoveryCodes())),
         ])->save();
     }
+
+    public function favoriteLocations()
+    {
+        return $this->hasMany(FavoriteLocation::class);
+    }
+
 }
