@@ -220,6 +220,11 @@
     {{-- Restaurant --}}
     @can('view-restaurant')
         <x-group-menu-item routePath="restaurant*" title="{{ __('Restaurant') }}" icon="heroicon-o-archive">
+            @can('view-restaurant')
+                <x-menu-item title="{{ __('Restaurants') }}" route="restaurants">
+                    <x-heroicon-o-folder class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
             @can('view-restaurant-categories')
                 <x-menu-item title="{{ __('Categories') }}" route="restaurant-categories">
                     <x-heroicon-o-folder class="w-5 h-5" />
