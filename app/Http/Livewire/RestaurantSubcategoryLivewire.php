@@ -5,17 +5,19 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
+use App\Models\RestaurantSubcategory;
 use App\Models\RestaurantCategory;
 use App\Models\Restaurant;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-class CategoryLivewire extends Component
+class RestaurantSubcategoryLivewire extends Component
 {
     use WithPagination, WithFileUploads;
 
-    public $category_id;
+    public $subcategory_id;
     public $restaurant_id;
+    public $category_id;
     public $name;
     public $description;
     public $image;
@@ -28,6 +30,7 @@ class CategoryLivewire extends Component
 
     public $search = '';
     public $filter_restaurant = '';
+    public $filter_category = '';
     public $filter_status = '';
     public $filter_featured = '';
     public $sort_by = 'created_at';
@@ -36,10 +39,11 @@ class CategoryLivewire extends Component
     public $showModal = false;
     public $isEditing = false;
     public $confirmingDelete = false;
-    public $categoryToDelete;
+    public $subcategoryToDelete;
 
     protected $rules = [
         'restaurant_id' => 'required|exists:restaurants,id',
+        'category_id' => 'required|exists:restaurant_categories,id',
         'name' => 'required|string|max:255',
         'description' => 'nullable|string',
         'image' => 'nullable|image|max:2048',
@@ -56,7 +60,7 @@ class CategoryLivewire extends Component
 
     public function render()
     {
-        $query = RestaurantCategory::with(['restaurant']);
+        $query = RestaurantSubcategory::with(['restaurant', 'category']);
 
         // Apply search filter
         if ($this->search) {
@@ -69,6 +73,11 @@ class CategoryLivewire extends Component
         // Apply restaurant filter
         if ($this->filter_restaurant) {
             $query->where('restaurant_id', $this->filter_restaurant);
+        }
+
+        // Apply category filter
+        if ($this->filter_category) {
+            $query->where('category_id', $this->filter_category);
         }
 
         // Apply status filter
@@ -84,12 +93,14 @@ class CategoryLivewire extends Component
         // Apply sorting
         $query->orderBy($this->sort_by, $this->sort_direction);
 
-        $categories = $query->paginate(10);
+        $subcategories = $query->paginate(10);
         $restaurants = Restaurant::active()->orderBy('name')->get();
+        $categories = RestaurantCategory::active()->orderBy('name')->get();
 
-        return view('livewire.category-livewire', [
-            'categories' => $categories,
+        return view('livewire.restaurant-subcategory-livewire', [
+            'subcategories' => $subcategories,
             'restaurants' => $restaurants,
+            'categories' => $categories,
         ]);
     }
 
@@ -100,19 +111,20 @@ class CategoryLivewire extends Component
         $this->showModal = true;
     }
 
-    public function edit($categoryId)
+    public function edit($subcategoryId)
     {
-        $category = RestaurantCategory::findOrFail($categoryId);
+        $subcategory = RestaurantSubcategory::findOrFail($subcategoryId);
         
-        $this->category_id = $category->id;
-        $this->restaurant_id = $category->restaurant_id;
-        $this->name = $category->name;
-        $this->description = $category->description;
-        $this->image_url = $category->image_url;
-        $this->icon_url = $category->icon_url;
-        $this->sort_order = $category->sort_order;
-        $this->is_active = $category->is_active;
-        $this->is_featured = $category->is_featured;
+        $this->subcategory_id = $subcategory->id;
+        $this->restaurant_id = $subcategory->restaurant_id;
+        $this->category_id = $subcategory->category_id;
+        $this->name = $subcategory->name;
+        $this->description = $subcategory->description;
+        $this->image_url = $subcategory->image_url;
+        $this->icon_url = $subcategory->icon_url;
+        $this->sort_order = $subcategory->sort_order;
+        $this->is_active = $subcategory->is_active;
+        $this->is_featured = $subcategory->is_featured;
 
         $this->isEditing = true;
         $this->showModal = true;
@@ -124,6 +136,7 @@ class CategoryLivewire extends Component
 
         $data = [
             'restaurant_id' => $this->restaurant_id,
+            'category_id' => $this->category_id,
             'name' => $this->name,
             'description' => $this->description,
             'sort_order' => $this->sort_order,
@@ -133,66 +146,66 @@ class CategoryLivewire extends Component
 
         // Handle image upload
         if ($this->image) {
-            $imagePath = $this->image->store('restaurant-categories/images', 'public');
+            $imagePath = $this->image->store('restaurant-subcategories/images', 'public');
             $data['image_url'] = 'storage/' . $imagePath;
         }
 
         // Handle icon upload
         if ($this->icon) {
-            $iconPath = $this->icon->store('restaurant-categories/icons', 'public');
+            $iconPath = $this->icon->store('restaurant-subcategories/icons', 'public');
             $data['icon_url'] = 'storage/' . $iconPath;
         }
 
         if ($this->isEditing) {
-            $category = RestaurantCategory::findOrFail($this->category_id);
-            $category->update($data);
-            session()->flash('message', 'Category updated successfully!');
+            $subcategory = RestaurantSubcategory::findOrFail($this->subcategory_id);
+            $subcategory->update($data);
+            session()->flash('message', 'Subcategory updated successfully!');
         } else {
-            RestaurantCategory::create($data);
-            session()->flash('message', 'Category created successfully!');
+            RestaurantSubcategory::create($data);
+            session()->flash('message', 'Subcategory created successfully!');
         }
 
         $this->closeModal();
         $this->resetForm();
     }
 
-    public function delete($categoryId)
+    public function delete($subcategoryId)
     {
-        $this->categoryToDelete = $categoryId;
+        $this->subcategoryToDelete = $subcategoryId;
         $this->confirmingDelete = true;
     }
 
     public function confirmDelete()
     {
-        $category = RestaurantCategory::findOrFail($this->categoryToDelete);
+        $subcategory = RestaurantSubcategory::findOrFail($this->subcategoryToDelete);
         
         // Delete associated images
-        if ($category->image_url) {
-            Storage::disk('public')->delete(str_replace('storage/', '', $category->image_url));
+        if ($subcategory->image_url) {
+            Storage::disk('public')->delete(str_replace('storage/', '', $subcategory->image_url));
         }
-        if ($category->icon_url) {
-            Storage::disk('public')->delete(str_replace('storage/', '', $category->icon_url));
+        if ($subcategory->icon_url) {
+            Storage::disk('public')->delete(str_replace('storage/', '', $subcategory->icon_url));
         }
         
-        $category->delete();
+        $subcategory->delete();
         
-        session()->flash('message', 'Category deleted successfully!');
+        session()->flash('message', 'Subcategory deleted successfully!');
         $this->confirmingDelete = false;
-        $this->categoryToDelete = null;
+        $this->subcategoryToDelete = null;
     }
 
-    public function toggleStatus($categoryId)
+    public function toggleStatus($subcategoryId)
     {
-        $category = RestaurantCategory::findOrFail($categoryId);
-        $category->update(['is_active' => !$category->is_active]);
-        session()->flash('message', 'Category status updated successfully!');
+        $subcategory = RestaurantSubcategory::findOrFail($subcategoryId);
+        $subcategory->update(['is_active' => !$subcategory->is_active]);
+        session()->flash('message', 'Subcategory status updated successfully!');
     }
 
-    public function toggleFeatured($categoryId)
+    public function toggleFeatured($subcategoryId)
     {
-        $category = RestaurantCategory::findOrFail($categoryId);
-        $category->update(['is_featured' => !$category->is_featured]);
-        session()->flash('message', 'Category featured status updated successfully!');
+        $subcategory = RestaurantSubcategory::findOrFail($subcategoryId);
+        $subcategory->update(['is_featured' => !$subcategory->is_featured]);
+        session()->flash('message', 'Subcategory featured status updated successfully!');
     }
 
     public function closeModal()
@@ -203,8 +216,9 @@ class CategoryLivewire extends Component
 
     public function resetForm()
     {
-        $this->category_id = null;
+        $this->subcategory_id = null;
         $this->restaurant_id = '';
+        $this->category_id = '';
         $this->name = '';
         $this->description = '';
         $this->image = null;
@@ -223,6 +237,11 @@ class CategoryLivewire extends Component
     }
 
     public function updatedFilterRestaurant()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterCategory()
     {
         $this->resetPage();
     }
@@ -246,4 +265,16 @@ class CategoryLivewire extends Component
             $this->sort_direction = 'asc';
         }
     }
+
+    public function getFilteredCategories()
+    {
+        if ($this->restaurant_id) {
+            return RestaurantCategory::where('restaurant_id', $this->restaurant_id)
+                ->active()
+                ->orderBy('name')
+                ->get();
+        }
+        return collect();
+    }
 }
+

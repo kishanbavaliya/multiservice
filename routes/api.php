@@ -37,6 +37,13 @@ use App\Http\Controllers\API\OTPController;
 use App\Http\Controllers\API\SocialLoginController;
 use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\RestaurantController;
+use App\Http\Controllers\API\RestaurantCategoryController;
+use App\Http\Controllers\API\RestaurantSubcategoryController;
+use App\Http\Controllers\API\RestaurantProductController;
+use App\Http\Controllers\API\RestaurantBannerController;
+use App\Http\Controllers\API\RestaurantServingSizeController;
+use App\Http\Controllers\API\RestaurantModifierController;
+use App\Http\Controllers\API\RestaurantModifierGroupController;
 use App\Http\Controllers\API\FoodAppController;
 use App\Http\Controllers\API\ProductReviewController;
 use App\Http\Controllers\API\ProductReviewSummaryController;
@@ -148,16 +155,131 @@ Route::get('service/durations', [ServiceController::class, 'durations']);
 Route::apiResource('vendors', VendorController::class);
 Route::get('vendor/reviews', [ReviewController::class, 'index']);
 
-// create New route for get Restaurant List
-Route::get('/restaurants', [RestaurantController::class, 'index']);
-Route::post('/restaurants', [RestaurantController::class, 'storeRestaurant']);
+// Restaurant Management
+Route::prefix('restaurants')->group(function () {
+    Route::get('/', [RestaurantController::class, 'index']);
+    Route::get('/trending', [RestaurantController::class, 'getTopTrendingRestaurants']);
+    Route::get('/best-sellers', [RestaurantController::class, 'getBestSellersRestaurants']);
+    Route::get('/nearby', [RestaurantController::class, 'getNearbyRestaurants']);
+    Route::get('/search', [RestaurantController::class, 'search']);
+    Route::get('/stats', [RestaurantController::class, 'getStats']);
+    Route::get('/cuisine/{cuisineType}', [RestaurantController::class, 'getByCuisineType']);
+    Route::get('/city/{city}', [RestaurantController::class, 'getByCity']);
+    Route::get('/{id}', [RestaurantController::class, 'show']);
+    Route::get('/{id}/menu', [FoodAppController::class, 'getRestaurantMenu']);
+});
+
+// Test route to verify controller works
+Route::get('/test-restaurant', [RestaurantController::class, 'index']);
+
+// Food App Routes
 Route::get('/get-offers', [RestaurantController::class, 'getOffers']);
-Route::get('/restaurants/trending', [RestaurantController::class, 'getTopTrendingRestaurants']);
-Route::get('/restaurants/popular-brands', [RestaurantController::class, 'getPopularBrands']);
-Route::get('/restaurants/best-sellers', [RestaurantController::class, 'getBestSellers']);
 Route::get('/categories', [FoodAppController::class, 'getCategories']);
 Route::get('/categories/{id}/restaurants', [FoodAppController::class, 'getRestaurantsByCategory']);
-Route::get('/restaurants/{id}/menu', [FoodAppController::class, 'getRestaurantMenu']);
+
+// Restaurant Category Management
+Route::prefix('restaurant-categories')->group(function () {
+    Route::get('/', [RestaurantCategoryController::class, 'index']);
+    Route::post('/', [RestaurantCategoryController::class, 'store']);
+    Route::get('/{id}', [RestaurantCategoryController::class, 'show']);
+    Route::put('/{id}', [RestaurantCategoryController::class, 'update']);
+    Route::delete('/{id}', [RestaurantCategoryController::class, 'destroy']);
+    Route::get('/restaurant/{restaurantId}', [RestaurantCategoryController::class, 'getByRestaurant']);
+    Route::patch('/{id}/toggle-status', [RestaurantCategoryController::class, 'toggleStatus']);
+    Route::patch('/{id}/toggle-featured', [RestaurantCategoryController::class, 'toggleFeatured']);
+    Route::get('/search', [RestaurantCategoryController::class, 'search']);
+    Route::get('/stats', [RestaurantCategoryController::class, 'getStats']);
+});
+
+// Restaurant Subcategory Management
+Route::prefix('restaurant-subcategories')->group(function () {
+    Route::get('/', [RestaurantSubcategoryController::class, 'index']);
+    Route::post('/', [RestaurantSubcategoryController::class, 'store']);
+    Route::get('/{id}', [RestaurantSubcategoryController::class, 'show']);
+    Route::put('/{id}', [RestaurantSubcategoryController::class, 'update']);
+    Route::delete('/{id}', [RestaurantSubcategoryController::class, 'destroy']);
+    Route::get('/restaurant/{restaurantId}', [RestaurantSubcategoryController::class, 'getByRestaurant']);
+    Route::get('/category/{categoryId}', [RestaurantSubcategoryController::class, 'getByCategory']);
+    Route::patch('/{id}/toggle-status', [RestaurantSubcategoryController::class, 'toggleStatus']);
+    Route::patch('/{id}/toggle-featured', [RestaurantSubcategoryController::class, 'toggleFeatured']);
+});
+
+// Restaurant Product Management
+Route::prefix('restaurant-products')->group(function () {
+    Route::get('/', [RestaurantProductController::class, 'index']);
+    Route::post('/', [RestaurantProductController::class, 'store']);
+    Route::get('/{id}', [RestaurantProductController::class, 'show']);
+    Route::put('/{id}', [RestaurantProductController::class, 'update']);
+    Route::delete('/{id}', [RestaurantProductController::class, 'destroy']);
+    Route::get('/restaurant/{restaurantId}', [RestaurantProductController::class, 'getByRestaurant']);
+    Route::get('/category/{categoryId}', [RestaurantProductController::class, 'getByCategory']);
+    Route::get('/subcategory/{subcategoryId}', [RestaurantProductController::class, 'getBySubcategory']);
+    Route::patch('/{id}/toggle-availability', [RestaurantProductController::class, 'toggleAvailability']);
+    Route::patch('/{id}/toggle-featured', [RestaurantProductController::class, 'toggleFeatured']);
+    Route::get('/featured', [RestaurantProductController::class, 'getFeatured']);
+    Route::get('/popular', [RestaurantProductController::class, 'getPopular']);
+    Route::get('/search', [RestaurantProductController::class, 'search']);
+});
+
+// Restaurant Banner Management
+Route::prefix('restaurant-banners')->group(function () {
+    Route::get('/', [RestaurantBannerController::class, 'index']);
+    Route::post('/', [RestaurantBannerController::class, 'store']);
+    Route::get('/{id}', [RestaurantBannerController::class, 'show']);
+    Route::put('/{id}', [RestaurantBannerController::class, 'update']);
+    Route::delete('/{id}', [RestaurantBannerController::class, 'destroy']);
+    Route::get('/restaurant/{restaurantId}', [RestaurantBannerController::class, 'getByRestaurant']);
+    Route::get('/type/{type}', [RestaurantBannerController::class, 'getByType']);
+    Route::get('/position/{position}', [RestaurantBannerController::class, 'getByPosition']);
+    Route::patch('/{id}/toggle-status', [RestaurantBannerController::class, 'toggleStatus']);
+    Route::post('/{id}/increment-click', [RestaurantBannerController::class, 'incrementClick']);
+    Route::post('/{id}/increment-impression', [RestaurantBannerController::class, 'incrementImpression']);
+    Route::get('/{id}/stats', [RestaurantBannerController::class, 'getStats']);
+});
+
+// Restaurant Serving Size Management
+Route::prefix('restaurant-serving-sizes')->group(function () {
+    Route::get('/', [RestaurantServingSizeController::class, 'index']);
+    Route::post('/', [RestaurantServingSizeController::class, 'store']);
+    Route::get('/{id}', [RestaurantServingSizeController::class, 'show']);
+    Route::put('/{id}', [RestaurantServingSizeController::class, 'update']);
+    Route::delete('/{id}', [RestaurantServingSizeController::class, 'destroy']);
+    Route::get('/restaurant/{restaurantId}', [RestaurantServingSizeController::class, 'getByRestaurant']);
+    Route::get('/global', [RestaurantServingSizeController::class, 'getGlobal']);
+    Route::get('/available/{restaurantId}', [RestaurantServingSizeController::class, 'getAvailableForRestaurant']);
+    Route::patch('/{id}/toggle-status', [RestaurantServingSizeController::class, 'toggleStatus']);
+    Route::get('/search', [RestaurantServingSizeController::class, 'search']);
+    Route::get('/stats', [RestaurantServingSizeController::class, 'getStats']);
+});
+
+// Restaurant Modifier Management
+Route::prefix('restaurant-modifiers')->group(function () {
+    Route::get('/', [RestaurantModifierController::class, 'index']);
+    Route::post('/', [RestaurantModifierController::class, 'store']);
+    Route::get('/{id}', [RestaurantModifierController::class, 'show']);
+    Route::put('/{id}', [RestaurantModifierController::class, 'update']);
+    Route::delete('/{id}', [RestaurantModifierController::class, 'destroy']);
+    Route::get('/restaurant/{restaurantId}', [RestaurantModifierController::class, 'getByRestaurant']);
+    Route::patch('/{id}/toggle-status', [RestaurantModifierController::class, 'toggleStatus']);
+    Route::get('/search', [RestaurantModifierController::class, 'search']);
+    Route::get('/stats', [RestaurantModifierController::class, 'getStats']);
+});
+
+// Restaurant Modifier Group Management
+Route::prefix('restaurant-modifier-groups')->group(function () {
+    Route::get('/', [RestaurantModifierGroupController::class, 'index']);
+    Route::post('/', [RestaurantModifierGroupController::class, 'store']);
+    Route::get('/{id}', [RestaurantModifierGroupController::class, 'show']);
+    Route::put('/{id}', [RestaurantModifierGroupController::class, 'update']);
+    Route::delete('/{id}', [RestaurantModifierGroupController::class, 'destroy']);
+    Route::get('/restaurant/{restaurantId}', [RestaurantModifierGroupController::class, 'getByRestaurant']);
+    Route::get('/type/{type}', [RestaurantModifierGroupController::class, 'getBySelectionType']);
+    Route::patch('/{id}/toggle-status', [RestaurantModifierGroupController::class, 'toggleStatus']);
+    Route::get('/search', [RestaurantModifierGroupController::class, 'search']);
+    Route::get('/stats', [RestaurantModifierGroupController::class, 'getStats']);
+    Route::get('/restaurant/{restaurantId}/available-modifiers', [RestaurantModifierGroupController::class, 'getAvailableModifiers']);
+});
+
 Route::get('/menu-items/{id}', [FoodAppController::class, 'getMenuItemDetails']);
 
 

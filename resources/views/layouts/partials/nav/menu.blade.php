@@ -217,6 +217,47 @@
     </x-group-menu-item>
     @endshowService
 
+    {{-- Restaurant --}}
+    @can('view-restaurant')
+        <x-group-menu-item routePath="restaurant*" title="{{ __('Restaurant') }}" icon="heroicon-o-archive">
+            @can('view-restaurant-categories')
+                <x-menu-item title="{{ __('Categories') }}" route="restaurant-categories">
+                    <x-heroicon-o-folder class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+            @can('view-restaurant-subcategories')
+                <x-menu-item title="{{ __('Subcategories') }}" route="restaurant-subcategories">
+                    <x-heroicon-o-document-duplicate class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+            @can('view-restaurant-serving-sizes')
+                <x-menu-item title="{{ __('Serving Sizes') }}" route="restaurant-serving-sizes">
+                    <x-heroicon-o-scale class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+            @can('view-restaurant-modifiers')
+                <x-menu-item title="{{ __('Modifiers') }}" route="restaurant-modifiers">
+                    <x-heroicon-o-adjustments class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+            @can('view-restaurant-modifier-groups')
+                <x-menu-item title="{{ __('Modifier Groups') }}" route="restaurant-modifier-groups">
+                    <x-heroicon-o-collection class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+            @can('view-restaurant-products')
+                <x-menu-item title="{{ __('Products') }}" route="restaurant-products">
+                    <x-heroicon-o-archive class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+            @can('view-restaurant-banners')
+                <x-menu-item title="{{ __('Banners') }}" route="restaurant-banners">
+                    <x-heroicon-o-photograph class="w-5 h-5" />
+                </x-menu-item>
+            @endcan
+        </x-group-menu-item>
+    @endcan
+
     {{-- taxi booking --}}
     @can('view-taxi')
         <x-group-menu-item routePath="taxi/*" title="{{ __('Taxi Booking') }}" icon="tabler-brand-uber">

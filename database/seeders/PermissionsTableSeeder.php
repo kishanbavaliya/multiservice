@@ -137,6 +137,16 @@ view-tags
             //
             "view-product-brands",
             "manage-product-brands",
+            // Restaurant permissions for admin
+            "view-restaurant",
+            "view-restaurant-categories",
+            "view-restaurant-subcategories",
+            "view-restaurant-serving-sizes",
+            "view-restaurant-modifiers",
+            "view-restaurant-modifier-groups",
+            "view-restaurant-products",
+            "view-restaurant-banners",
+            "manage-all-restaurants",
         ];
         //managers roles only
         $managerRolePermissions = [
@@ -144,6 +154,19 @@ view-tags
             "my-subscription",
             'my-earning',
             'change-order-status',
+        ];
+
+        // Restaurant manager permissions
+        $restaurantManagerPermissions = [
+            "view-restaurant",
+            "view-restaurant-categories",
+            "view-restaurant-subcategories", 
+            "view-restaurant-serving-sizes",
+            "view-restaurant-modifiers",
+            "view-restaurant-modifier-groups",
+            "view-restaurant-products",
+            "view-restaurant-banners",
+            "manage-assigned-restaurant",
         ];
         //admin & manager permissions
         $adminManagerRolePermissions = [
@@ -199,6 +222,7 @@ view-tags
         $allPermissions = array_merge(
             $fleetManagerPermissions,
             $managerRolePermissions,
+            $restaurantManagerPermissions,
             $adminRolePermissions,
             $crudPermissions,
             $adminManagerRolePermissions,
@@ -245,6 +269,14 @@ view-tags
             'guard_name' => 'web'
         ]);
         $cityAdminRole->syncPermissions($cityAdminRolePermissions, $allRolePermissions);
+
+        // Restaurant manager role permissions
+        $restaurantManagerRole = Role::firstorcreate([
+            'name' => 'restaurant-manager'
+        ], [
+            'guard_name' => 'web'
+        ]);
+        $restaurantManagerRole->syncPermissions($restaurantManagerPermissions);
 
         //others
     }
