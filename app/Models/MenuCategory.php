@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class NewCategory extends Model
+class MenuCategory extends Model
 {
-    protected $table = 'new_categories'; // your actual table name
+    protected $table = 'menu_categories'; // your actual table name
 
     protected $fillable = [
         'name',

@@ -148,19 +148,6 @@ Route::get('service/durations', [ServiceController::class, 'durations']);
 Route::apiResource('vendors', VendorController::class);
 Route::get('vendor/reviews', [ReviewController::class, 'index']);
 
-// create New route for get Restaurant List
-Route::get('/restaurants', [RestaurantController::class, 'index']);
-Route::post('/restaurants', [RestaurantController::class, 'storeRestaurant']);
-Route::get('/get-offers', [RestaurantController::class, 'getOffers']);
-Route::get('/restaurants/trending', [RestaurantController::class, 'getTopTrendingRestaurants']);
-Route::get('/restaurants/popular-brands', [RestaurantController::class, 'getPopularBrands']);
-Route::get('/restaurants/best-sellers', [RestaurantController::class, 'getBestSellers']);
-Route::get('/categories', [FoodAppController::class, 'getCategories']);
-Route::get('/categories/{id}/restaurants', [FoodAppController::class, 'getRestaurantsByCategory']);
-Route::get('/restaurants/{id}/menu', [FoodAppController::class, 'getRestaurantMenu']);
-Route::get('/menu-items/{id}', [FoodAppController::class, 'getMenuItemDetails']);
-
-
 //
 Route::get('product/reviews', [ProductReviewController::class, 'index']);
 Route::apiResource('vendor/types', VendorTypeController::class);
@@ -210,6 +197,22 @@ Route::group(['middleware' => ['auth:sanctum', "user.active.check"]], function (
     Route::middleware('throttle.order.api')->group(function () {
         Route::post('orders', [OrderController::class, 'store']);
     });
+
+    // create New route for get Restaurant List
+    Route::get('/restaurants', [RestaurantController::class, 'index']);
+    Route::post('/restaurants', [RestaurantController::class, 'storeRestaurant']);
+    Route::get('/restaurants/{id}', [RestaurantController::class, 'getRestaurantDetails']);
+    Route::get('/get-offers', [RestaurantController::class, 'getOffers']);
+    Route::post('/offers', [RestaurantController::class, 'createOffer']);
+    Route::get('/restaurants/trending', [RestaurantController::class, 'getTopTrendingRestaurants']);
+    Route::get('/restaurants/popular-brands', [RestaurantController::class, 'getPopularBrands']);
+    Route::get('/restaurants/best-sellers', [RestaurantController::class, 'getBestSellers']);
+    Route::get('/menu-categories', [FoodAppController::class, 'getMenuCategories']);
+    Route::post('/categories', [FoodAppController::class, 'createCategory']);
+    Route::get('/categories', [FoodAppController::class, 'getCategories']);
+    Route::get('/categories/{id}/restaurants', [FoodAppController::class, 'getRestaurantsByCategory']);
+    Route::get('/restaurants/{id}/menu', [FoodAppController::class, 'getRestaurantMenu']);
+    Route::get('/menu-items/{id}', [FoodAppController::class, 'getMenuItemDetails']);
 
     Route::post('/track/order', [TrackOrderController::class, "track"]);
     Route::apiResource('rating', RatingController::class)->only('store');

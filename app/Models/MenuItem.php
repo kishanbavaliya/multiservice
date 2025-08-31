@@ -10,7 +10,7 @@ class MenuItem extends Model
 
     protected $fillable = [
         'restaurant_id',
-        'new_categories_id',
+        'menu_categories_id',
         'name',
         'description',
         'image_url',
@@ -20,7 +20,7 @@ class MenuItem extends Model
 
     public function new_category()
     {
-        return $this->belongsTo(NewCategory::class, 'new_categories_id');
+        return $this->belongsTo(MenuCategory::class, 'menu_categories_id');
     }
 
     public function customizations()

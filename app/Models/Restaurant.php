@@ -10,7 +10,7 @@ class Restaurant extends Model
     protected $table = 'restaurants';
 
     protected $fillable = [
-        'name', 'description', 'logo_url', 'banner_url',
+        'name', 'description', 'logo_url', 'image_url',
         'cuisine_type', 'address', 'latitude', 'longitude',
         'delivery_fee', 'min_delivery_time', 'max_delivery_time',
         'rating', 'offer_id'
@@ -22,8 +22,8 @@ class Restaurant extends Model
         return $value ? URL::to($value) : null;
     }
 
-    // Accessor for banner_url
-    public function getBannerUrlAttribute($value)
+    // Accessor for image_url
+    public function getImageUrlAttribute($value)
     {
         return $value ? URL::to($value) : null;
     }
