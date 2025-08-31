@@ -22,6 +22,7 @@ class VehicleTypeLivewire extends BaseLivewireComponent
         ['id' => 'car', 'name' => 'Car'],
         ['id' => 'bike', 'name' => 'Bike'],
     ];
+    public $seater;
     public $type;
 
     protected $rules = [
@@ -33,6 +34,7 @@ class VehicleTypeLivewire extends BaseLivewireComponent
         "type" => 'required',
         "photo" => "required|image|max:1024",
         "secondPhoto" => "nullable|image|max:300",
+        "seater" => 'required',
     ];
 
     public function render()
@@ -56,6 +58,7 @@ class VehicleTypeLivewire extends BaseLivewireComponent
             $vehicleType->distance_fare = $this->distance_fare;
             $vehicleType->time_fare = $this->time_fare;
             $vehicleType->min_fare = $this->min_fare;
+            $vehicleType->seater = $this->seater;
             $vehicleType->type = $this->type;
             $vehicleType->is_active = $this->is_active;
             $vehicleType->save();
@@ -93,6 +96,7 @@ class VehicleTypeLivewire extends BaseLivewireComponent
         $this->distance_fare = $this->selectedModel->distance_fare;
         $this->time_fare = $this->selectedModel->time_fare;
         $this->min_fare = $this->selectedModel->min_fare;
+        $this->seater = $this->selectedModel->seater;
         $this->type = $this->selectedModel->type;
         $this->is_active = $this->selectedModel->is_active;
         $this->emit('showEditModal');
@@ -108,6 +112,7 @@ class VehicleTypeLivewire extends BaseLivewireComponent
             "distance_fare" => 'required|numeric',
             "time_fare" => 'required|numeric',
             "min_fare" => 'required|numeric',
+            "seater" => 'required',
             "type" => 'required',
             "photo" => "nullable|sometimes|image|max:" . setting("filelimit.vendor_type", 200) . "",
             "secondPhoto" => "nullable|image|max:300",
@@ -121,6 +126,7 @@ class VehicleTypeLivewire extends BaseLivewireComponent
             $this->selectedModel->distance_fare = $this->distance_fare;
             $this->selectedModel->time_fare = $this->time_fare;
             $this->selectedModel->min_fare = $this->min_fare;
+            $this->selectedModel->seater = $this->seater;
             $this->selectedModel->type = $this->type;
             $this->selectedModel->is_active = $this->is_active;
             $this->selectedModel->save();

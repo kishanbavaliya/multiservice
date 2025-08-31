@@ -14,6 +14,7 @@
             <x-input title="{{ __('Distance Fare') }}(/km)" name="distance_fare" />
             <x-input title="{{ __('Fare Per Minutes') }}" name="time_fare" />
             <x-input title="{{ __('Minimum Fare') }}" name="min_fare" />
+            <x-input title="{{ __('Seater') }}" name="seater" />
             <x-select2 title="{{ __('Type') }}" :options='$this->types' name="type" id="type"
                 :multiple="false" width="100" :ignore="true" />
             <x-media-upload title="{{ __('Photo') }}" name="photo" preview="{{ $selectedModel->logo ?? '' }}"
@@ -33,6 +34,7 @@
             <x-input title="{{ __('Distance Fare') }}(/km)" name="distance_fare" />
             <x-input title="{{ __('Fare Per Minutes') }}" name="time_fare" />
             <x-input title="{{ __('Minimum Fare') }}" name="min_fare" />
+            <x-input title="{{ __('Seater') }}" name="seater" />
             <x-select2 title="{{ __('Type') }}" :options='$this->types' name="type" id="type"
                 :multiple="false" width="100" :ignore="true" />
             <x-media-upload title="{{ __('Photo') }}" name="photo" preview="{{ $selectedModel->photo ?? '' }}"
