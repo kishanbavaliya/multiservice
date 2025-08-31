@@ -10,7 +10,7 @@ use App\Models\Restaurant;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-class CategoryLivewire extends Component
+class RestaurantCategoryLivewire extends Component
 {
     use WithPagination, WithFileUploads;
 
@@ -87,7 +87,7 @@ class CategoryLivewire extends Component
         $categories = $query->paginate(10);
         $restaurants = Restaurant::active()->orderBy('name')->get();
 
-        return view('livewire.category-livewire', [
+        return view('livewire.restaurant-category-livewire', [
             'categories' => $categories,
             'restaurants' => $restaurants,
         ]);

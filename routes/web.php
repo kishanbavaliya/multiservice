@@ -31,6 +31,14 @@ use App\Http\Livewire\OptionGroupLivewire;
 use App\Http\Livewire\MenuLivewire;
 use App\Http\Livewire\OptionLivewire;
 use App\Http\Livewire\WalletTransactionLivewire;
+use App\Http\Livewire\RestaurantLivewire;
+use App\Http\Livewire\RestaurantCategoryLivewire;
+use App\Http\Livewire\RestaurantSubcategoryLivewire;
+use App\Http\Livewire\RestaurantProductLivewire;
+use App\Http\Livewire\RestaurantBannerLivewire;
+use App\Http\Livewire\RestaurantServingSizeLivewire;
+use App\Http\Livewire\RestaurantModifierLivewire;
+use App\Http\Livewire\RestaurantModifierGroupLivewire;
 use App\Http\Livewire\PaymentAccountLivewire;
 
 use App\Http\Livewire\ServiceLivewire;
@@ -397,6 +405,36 @@ Route::group(['middleware' => ['web']], function () {
         Route::get('taxi/vehicles', VehicleLivewire::class)
             ->name('taxi.vehicles')
             ->middleware(['permission:view-taxi-vehicles']);
+
+        // Restaurant Management Routes
+        Route::get('restaurants', RestaurantLivewire::class)->name('restaurants');
+        Route::get('restaurant-categories', RestaurantCategoryLivewire::class)->name('restaurant-categories');
+        Route::get('restaurant-subcategories', RestaurantSubcategoryLivewire::class)->name('restaurant-subcategories');
+        Route::get('restaurant-products', RestaurantProductLivewire::class)->name('restaurant-products');
+        Route::get('restaurant-banners', RestaurantBannerLivewire::class)->name('restaurant-banners');
+        Route::get('restaurant-serving-sizes', RestaurantServingSizeLivewire::class)->name('restaurant-serving-sizes');
+Route::get('restaurant-modifiers', RestaurantModifierLivewire::class)->name('restaurant-modifiers');
+Route::get('restaurant-modifier-groups', RestaurantModifierGroupLivewire::class)->name('restaurant-modifier-groups');
+
+// Temporary test route to check restaurants
+Route::get('test-restaurants', function() {
+    $restaurants = App\Models\Restaurant::all();
+    return response()->json([
+        'count' => $restaurants->count(),
+        'restaurants' => $restaurants->map(function($r) {
+            return [
+                'id' => $r->id,
+                'name' => $r->name,
+                'status' => $r->status
+            ];
+        })
+    ]);
+});
+        
+        // Test route for debugging
+        Route::get('test-restaurant-products', function() {
+            return 'Restaurant Products route is working!';
+        })->name('test-restaurant-products');
 
         Route::get('taxi/car/makes', CarMakeLivewire::class)
             ->name('taxi.car.makes')

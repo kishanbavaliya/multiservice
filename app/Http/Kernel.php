@@ -73,5 +73,6 @@ class Kernel extends HttpKernel
         'restrict_roles' => \App\Http\Middleware\RestrictRolesMiddleware::class,
         'user.active.check' => \App\Http\Middleware\UserActiveCheck::class,
         'two-factor.check' => \App\Http\Middleware\CheckTwoFactorAuthentication::class,
+        'restaurant.access' => \App\Http\Middleware\RestaurantAccessMiddleware::class,
     ];
 }
