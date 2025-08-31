@@ -208,7 +208,7 @@
                     </button>
                 </div>
 
-                <form wire:submit.prevent="save" class="space-y-6">
+                <form wire:submit.prevent="save" class="space-y-6" enctype="multipart/form-data">
                     <!-- Basic Information -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>

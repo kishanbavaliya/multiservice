@@ -168,7 +168,7 @@
                     </button>
                 </div>
 
-                <form wire:submit.prevent="save" class="space-y-6">
+                <form wire:submit.prevent="save" class="space-y-6" enctype="multipart/form-data">
                     <!-- Restaurant Selection -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Restaurant <span class="text-red-500">*</span> ({{ $restaurants->count() }} available)</label>
