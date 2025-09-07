@@ -9,6 +9,296 @@ https://yourdomain.com/api/restaurants
 ```
 
 ## Authentication
+
+---
+
+## Create Restaurant (POST /)
+
+### Description
+Create a new restaurant. Requires authentication. Managers creating restaurants will be assigned to them automatically.
+
+### Endpoint
+```http
+POST /api/restaurants
+```
+
+### Body Parameters
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | string | Yes | Restaurant name |
+| `address` | string | Yes | Street address |
+| `description` | string | No | Short description |
+| `logo_url` | string | No | URL for logo image |
+| `banner_url` | string | No | URL for banner image |
+| `cuisine_type` | string | No | Cuisine tag |
+| `city` | string | No | City |
+| `state` | string | No | State |
+| `country` | string | No | Country |
+| `postal_code` | string | No | Postal code |
+| `latitude` | numeric | No | Latitude coordinate |
+| `longitude` | numeric | No | Longitude coordinate |
+| `phone` | string | No | Contact phone |
+| `email` | string | No | Contact email |
+| `website` | string | No | Website URL |
+| `opening_hours` | object | No | Opening hours JSON |
+| `delivery_fee` | numeric | No | Delivery fee |
+| `minimum_order` | numeric | No | Minimum order amount |
+| `min_delivery_time` | integer | No | Minimum delivery time in minutes |
+| `max_delivery_time` | integer | No | Maximum delivery time in minutes |
+| `delivery_available` | boolean | No | Delivery available flag |
+| `pickup_available` | boolean | No | Pickup available flag |
+| `delivery_radius` | numeric | No | Delivery radius in km |
+| `status` | string | No | Restaurant status (active,inactive,suspended) |
+| `is_featured` | boolean | No | Featured flag |
+| `is_verified` | boolean | No | Verified flag |
+
+### Example Request
+```bash
+curl -X POST "https://yourdomain.com/api/restaurants" \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "New Diner",
+    "address": "456 Side Street",
+    "city": "San Francisco",
+    "cuisine_type": "American",
+    "delivery_fee": 3.50
+  }'
+```
+
+### Response (201 Created)
+```json
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "name": "New Diner",
+    "address": "456 Side Street",
+    "city": "San Francisco",
+    "cuisine_type": "American",
+    "delivery_fee": 3.5,
+    "created_at": "2025-09-07T12:00:00.000000Z"
+  },
+  "message": "Restaurant created successfully"
+}
+```
+
+---
+
+## Update Restaurant (PUT /{id})
+
+### Description
+Update an existing restaurant. Only super_admin or users assigned to the restaurant can update it.
+
+### Endpoint
+```http
+PUT /api/restaurants/{id}
+```
+
+### Body Parameters
+Any of the fields from the Create endpoint may be provided; all are optional.
+
+### Example Request
+```bash
+curl -X PUT "https://yourdomain.com/api/restaurants/123" \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "delivery_fee": 4.00,
+    "is_featured": true
+  }'
+```
+
+### Response
+```json
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "name": "New Diner",
+    "delivery_fee": 4.0,
+    "is_featured": true,
+    "updated_at": "2025-09-07T12:05:00.000000Z"
+  },
+  "message": "Restaurant updated successfully"
+}
+```
+
+---
+
+## Delete Restaurant (DELETE /{id})
+
+### Description
+Soft-delete a restaurant. Only super_admin or assigned users can delete.
+
+### Endpoint
+```http
+DELETE /api/restaurants/{id}
+```
+
+### Example Request
+```bash
+curl -X DELETE "https://yourdomain.com/api/restaurants/123" \
+  -H "Authorization: Bearer {token}"
+```
+
+### Response
+```json
+{
+  "success": true,
+  "message": "Restaurant deleted successfully"
+}
+```
+
+---
+
+## Offers (routes under /api/offers)
+
+### Endpoints Summary
+```
+GET /api/offers
+POST /api/offers
+GET /api/offers/{id}
+PUT /api/offers/{id}
+DELETE /api/offers/{id}
+GET /api/offers/restaurant/{restaurantId}
+```
+
+### Example: Create Offer
+```bash
+curl -X POST "https://yourdomain.com/api/offers" \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "restaurant_id": 123,
+    "title": "10% off",
+    "discount_value": 10
+    'description' : 10, 
+    'discount_type' : 10, 
+    'discount_value' : 10, 
+    'start_at' : 10, 
+    'end_at': 10, 
+    'active': 1
+  }'
+```
+
+---
+
+## Cart Endpoints
+
+### Add to Cart (POST /api/cart/add)
+
+Add an item to the authenticated user's cart. Uses `restaurant_product_id` as canonical product identifier.
+
+#### Endpoint
+```http
+POST /api/cart/add
+```
+
+#### Body Parameters
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `restaurant_id` | integer | Yes | Restaurant id |
+| `restaurant_product_id` | integer | Yes | Identifier for the restaurant-specific product |
+| `quantity` | integer | Yes | Quantity to add |
+| `modifiers` | array | No | Array of modifier objects { "modifier_id": int, "modifier_group_id": int, "price": number, "quantity": int } |
+
+#### Example Request
+```bash
+curl -X POST "https://yourdomain.com/api/cart/add" \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "restaurant_product_id":1,
+    "quantity":1,
+    "restaurant_id":1,
+    "restaurant_category_id":1,
+    "restaurant_subcategory_id":1,
+    "modifiers":[
+        {
+            "id":1,
+            "group_id":1,
+            "name":"Tes",
+            "price":10,
+            "quantity":10,
+            "restaurant_id":1
+        }
+    ]
+}'
+```
+
+#### Response
+```json
+{
+  "success": true,
+  "data": {
+    "cart": {
+      "id": 1,
+      "user_id": 5,
+      "restaurant_id": 123,
+      "sub_total": 32.0,
+      "total": 32.0,
+      "items": [
+        {
+          "id": 11,
+          "restaurant_product_id": 456,
+          "quantity": 2,
+          "price": 14.0,
+          "modifiers": [
+            {"id": 1, "modifier_id": 10, "price": 1.5, "quantity": 1}
+          ]
+        }
+      ]
+    }
+  },
+  "message": "Item added to cart"
+}
+```
+
+### View Cart (GET /api/cart)
+
+#### Endpoint
+```http
+GET /api/cart
+```
+
+#### Query Parameters
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `restaurant_id` | integer | No | Filter cart by restaurant |
+| `vendor_id` | integer | No | Filter cart by vendor |
+
+#### Example Request
+```bash
+curl -X GET "https://yourdomain.com/api/cart?restaurant_id=123" \
+  -H "Authorization: Bearer {token}"
+```
+
+#### Response
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "user_id": 5,
+    "restaurant_id": 123,
+    "sub_total": 32.0,
+    "total": 32.0,
+    "items": [
+      {
+        "id": 11,
+        "restaurant_product_id": 456,
+        "quantity": 2,
+        "price": 14.0,
+        "modifiers": [
+          {"id": 1, "modifier_id": 10, "price": 1.5, "quantity": 1}
+        ]
+      }
+    ]
+  },
+  "message": "Cart retrieved successfully"
+}
+```
 All API endpoints require authentication. Include the Bearer token in the Authorization header:
 ```
 Authorization: Bearer {your_access_token}
@@ -433,6 +723,91 @@ curl -X GET "https://yourdomain.com/api/restaurants/search?query=chinese&deliver
 ```
 
 ---
+
+## 5.1 All Search (GET /all-search)
+
+### Description
+Performs a broad search across restaurants and dishes. This endpoint returns both matching restaurants and menu items (dishes) in a single response.
+
+### Endpoint
+```http
+GET /api/restaurants/all-search
+```
+
+### Query Parameters
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `query` | string | Yes | - | Search term (min 2 characters) |
+| `city` | string | No | - | Filter by city |
+| `cuisine_type` | string | No | - | Filter by cuisine type |
+| `delivery_available` | boolean | No | - | Filter by delivery availability |
+| `min_rating` | numeric | No | - | Minimum rating filter (0-5) |
+| `limit` | integer | No | 20 | Number of results per section (restaurants/dishes) |
+
+### Example Request
+```bash
+curl -X GET "https://yourdomain.com/api/restaurants/all-search?query=pizza&limit=10" \
+  -H "Authorization: Bearer {token}"
+```
+
+### Response
+```json
+{
+  "success": true,
+  "message": "Search completed successfully",
+  "data": {
+    "restaurants": [ /* array of restaurant objects (see GET /) */ ],
+    "dishes": [ /* array of restaurant product objects with restaurant summary */ ],
+    "total_restaurants": 5,
+    "total_dishes": 12,
+    "search_query": "pizza"
+  }
+}
+```
+
+---
+
+## 5.2 Filter (GET /filter)
+
+### Description
+Advanced filter endpoint combining offers, delivery options, rating, price levels and other business rules. Returns restaurants matching multiple complex filters and sorting options.
+
+### Endpoint
+```http
+GET /api/restaurants/filter
+```
+
+### Query Parameters
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `delivery_available` | boolean | No | - | Only restaurants offering delivery |
+| `free_delivery` | boolean | No | - | Only restaurants with zero delivery fee |
+| `min_discount` | integer | No | - | Minimum offer discount value |
+| `offers` | boolean | No | - | Only restaurants that have offers |
+| `top_rated` | boolean | No | - | Only top rated restaurants (rating >= 4.5) |
+| `price_level` | array/integer | No | - | Discount levels or pricing buckets to filter offers by |
+| `cuisine` | string | No | - | Filter by cuisine type |
+| `limit` | integer | No | 20 | Number of restaurants to return |
+| `sort_by` | string | No | rating | Sort option: top_rated, delivery_time, cost_low_to_high, cost_high_to_low, most_popular, recommended |
+
+### Example Request
+```bash
+curl -X GET "https://yourdomain.com/api/restaurants/filter?offers=true&min_discount=10&top_rated=true" \
+  -H "Authorization: Bearer {token}"
+```
+
+### Response
+```json
+{
+  "success": true,
+  "data": {
+    "restaurants": [ /* filtered restaurant objects */ ],
+    "total": 12
+  },
+  "message": "Filter completed successfully"
+}
+```
+
 
 ## 6. Restaurant Statistics (GET /stats)
 

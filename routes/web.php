@@ -391,6 +391,9 @@ Route::group(['middleware' => ['web']], function () {
             //subscription
             Route::get('subscription/subscriptions', SubscriptionLivewire::class)->name('subscriptions');
             Route::get('reports/subscriptions', SubscriptionReportLivewire::class)->name('reports.subscriptions');
+            
+            // Offers (Admin)
+            Route::get('offers', \App\Http\Livewire\Admin\OfferLivewire::class)->name('offers');
         });
 
         //Taxi booking

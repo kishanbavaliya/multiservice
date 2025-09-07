@@ -168,15 +168,30 @@ Route::prefix('restaurants')->group(function () {
     Route::get('/popular-brands', [RestaurantController::class, 'getPopularBrands']);
     Route::get('/{id}', [RestaurantController::class, 'show']);
     Route::get('/{id}/menu', [FoodAppController::class, 'getRestaurantMenu']);
+    Route::post('/', [RestaurantController::class, 'store']);
+    Route::put('/{id}', [RestaurantController::class, 'update']);
+    Route::delete('/{id}', [RestaurantController::class, 'destroy']);
+
 });
-Route::get('/search', [RestaurantController::class, 'allSearch']);
+Route::get('/all-search', [RestaurantController::class, 'allSearch']);
 Route::get('/filter', [RestaurantController::class, 'filter']);
 
 // Test route to verify controller works
-Route::get('/test-restaurant', [RestaurantController::class, 'index']);
+// Route::get('/test-restaurant', [RestaurantController::class, 'index']);
 
 // Food App Routes
 Route::get('/get-offers', [RestaurantController::class, 'getOffers']);
+
+// Offers API
+use App\Http\Controllers\API\OfferController;
+Route::prefix('offers')->group(function () {
+    Route::get('/', [OfferController::class, 'index']);
+    Route::post('/', [OfferController::class, 'store']);
+    Route::get('/{id}', [OfferController::class, 'show']);
+    Route::put('/{id}', [OfferController::class, 'update']);
+    Route::delete('/{id}', [OfferController::class, 'destroy']);
+    Route::get('/restaurant/{restaurantId}', [OfferController::class, 'getByRestaurant']);
+});
 Route::get('/categories', [FoodAppController::class, 'getCategories']);
 Route::get('/categories/{id}/restaurants', [FoodAppController::class, 'getRestaurantsByCategory']);
 
@@ -390,6 +405,10 @@ Route::group(['middleware' => ['auth:sanctum', "user.active.check"]], function (
     Route::get('loyalty/point/my', [LoyaltyPointController::class, 'current']);
     Route::get('loyalty/point/my/report', [LoyaltyPointController::class, 'report']);
     Route::post('loyalty/point/my/withdraw', [LoyaltyPointController::class, 'withdraw']);
+
+    // Cart APIs
+    Route::post('cart/add', [\App\Http\Controllers\API\CartController::class, 'add']);
+    Route::get('cart', [\App\Http\Controllers\API\CartController::class, 'view']);
 
     //
     Route::group(['middleware' => ['role:manager']], function () {

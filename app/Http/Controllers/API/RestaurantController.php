@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\RestaurantProduct;
 
 class RestaurantController extends Controller
 {
@@ -370,10 +371,16 @@ class RestaurantController extends Controller
                     $query->where('status', true);
                 },
                 'modifierGroups' => function ($query) {
-                    $query->where('status', true);
+                    $query->where('status', true)
+                    ->with(['modifiers' => function ($productQuery) {
+                        $productQuery->where('status', true);
+                    }]);
                 },
                 'banners' => function ($query) {
                     $query->where('is_active', true);
+                },
+                'offers' => function ($query) {
+                    $query->where('active', 1);
                 }
             ])->findOrFail($id);
 
@@ -923,5 +930,179 @@ class RestaurantController extends Controller
             'message' => 'Popular brands fetched successfully',
             'data' => $brands
         ]);
+    }
+
+    /**
+     * Create a new restaurant
+     */
+    public function store(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'address' => 'required|string',
+                'description' => 'nullable|string',
+                'logo_url' => 'nullable|string',
+                'banner_url' => 'nullable|string',
+                'cuisine_type' => 'nullable|string',
+                'city' => 'nullable|string',
+                'state' => 'nullable|string',
+                'country' => 'nullable|string',
+                'postal_code' => 'nullable|string',
+                'latitude' => 'nullable|numeric',
+                'longitude' => 'nullable|numeric',
+                'phone' => 'nullable|string',
+                'email' => 'nullable|email',
+                'website' => 'nullable|url',
+                'opening_hours' => 'nullable|array',
+                'delivery_fee' => 'nullable|numeric',
+                'minimum_order' => 'nullable|numeric',
+                'min_delivery_time' => 'nullable|integer',
+                'max_delivery_time' => 'nullable|integer',
+                'delivery_available' => 'nullable|boolean',
+                'pickup_available' => 'nullable|boolean',
+                'delivery_radius' => 'nullable|numeric',
+                'status' => 'nullable|in:active,inactive,suspended',
+                'is_featured' => 'nullable|boolean',
+                'is_verified' => 'nullable|boolean',
+                'assigned_admin_id' => 'nullable|exists:users,id',
+                'assigned_manager_id' => 'nullable|exists:users,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $data = $request->only((new Restaurant())->getFillable());
+
+            // If a manager creates a restaurant, assign it to them
+            if (Auth::user() && Auth::user()->hasRole('manager')) {
+                $data['assigned_manager_id'] = Auth::id();
+            }
+
+            $restaurant = Restaurant::create($data);
+
+            return response()->json([
+                'success' => true,
+                'data' => $restaurant,
+                'message' => 'Restaurant created successfully'
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create restaurant',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update an existing restaurant
+     */
+    public function update(Request $request, $id): JsonResponse
+    {
+        try {
+            $restaurant = Restaurant::findOrFail($id);
+
+            // Permission: only super_admin or users assigned to the restaurant can update
+            if (!(Auth::user() && Auth::user()->hasRole('super_admin')) && !($restaurant->hasUser(Auth::id()))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Forbidden'
+                ], 403);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'name' => 'nullable|string|max:255',
+                'address' => 'nullable|string',
+                'description' => 'nullable|string',
+                'logo_url' => 'nullable|string',
+                'banner_url' => 'nullable|string',
+                'cuisine_type' => 'nullable|string',
+                'city' => 'nullable|string',
+                'state' => 'nullable|string',
+                'country' => 'nullable|string',
+                'postal_code' => 'nullable|string',
+                'latitude' => 'nullable|numeric',
+                'longitude' => 'nullable|numeric',
+                'phone' => 'nullable|string',
+                'email' => 'nullable|email',
+                'website' => 'nullable|url',
+                'opening_hours' => 'nullable|array',
+                'delivery_fee' => 'nullable|numeric',
+                'minimum_order' => 'nullable|numeric',
+                'min_delivery_time' => 'nullable|integer',
+                'max_delivery_time' => 'nullable|integer',
+                'delivery_available' => 'nullable|boolean',
+                'pickup_available' => 'nullable|boolean',
+                'delivery_radius' => 'nullable|numeric',
+                'status' => 'nullable|in:active,inactive,suspended',
+                'is_featured' => 'nullable|boolean',
+                'is_verified' => 'nullable|boolean',
+                'assigned_admin_id' => 'nullable|exists:users,id',
+                'assigned_manager_id' => 'nullable|exists:users,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $data = $request->only((new Restaurant())->getFillable());
+            $restaurant->update($data);
+
+            return response()->json([
+                'success' => true,
+                'data' => $restaurant,
+                'message' => 'Restaurant updated successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update restaurant',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a restaurant
+     */
+    public function destroy($id): JsonResponse
+    {
+        try {
+            $restaurant = Restaurant::findOrFail($id);
+
+            // Permission: only super_admin or users assigned to the restaurant can delete
+            if (!(Auth::user() && Auth::user()->hasRole('super_admin')) && !($restaurant->hasUser(Auth::id()))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Forbidden'
+                ], 403);
+            }
+
+            $restaurant->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Restaurant deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete restaurant',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
