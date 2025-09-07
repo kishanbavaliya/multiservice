@@ -168,12 +168,16 @@ Route::prefix('restaurants')->group(function () {
     Route::get('/popular-brands', [RestaurantController::class, 'getPopularBrands']);
     Route::get('/{id}', [RestaurantController::class, 'show']);
     Route::get('/{id}/menu', [FoodAppController::class, 'getRestaurantMenu']);
+    Route::post('/', [RestaurantController::class, 'store']);
+    Route::put('/{id}', [RestaurantController::class, 'update']);
+    Route::delete('/{id}', [RestaurantController::class, 'destroy']);
+
 });
-Route::get('/search', [RestaurantController::class, 'allSearch']);
+Route::get('/all-search', [RestaurantController::class, 'allSearch']);
 Route::get('/filter', [RestaurantController::class, 'filter']);
 
 // Test route to verify controller works
-Route::get('/test-restaurant', [RestaurantController::class, 'index']);
+// Route::get('/test-restaurant', [RestaurantController::class, 'index']);
 
 // Food App Routes
 Route::get('/get-offers', [RestaurantController::class, 'getOffers']);

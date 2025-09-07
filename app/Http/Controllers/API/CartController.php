@@ -116,9 +116,13 @@ class CartController extends Controller
     {
         $user = Auth::user();
         $vendorId = $request->vendor_id ?? null;
+        $restaurant_id = $request->restaurant_id ?? null;
+
 
         $query = Cart::with('items.product', 'items.modifiers')->where('user_id', $user->id);
         if ($vendorId) $query->where('vendor_id', $vendorId);
+        if ($restaurant_id) $query->where('restaurant_id', $restaurant_id);
+
 
         $carts = $query->get();
         return response()->json($carts);
