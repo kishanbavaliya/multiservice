@@ -371,12 +371,15 @@ class RestaurantController extends Controller
                     $query->where('status', true);
                 },
                 'modifierGroups' => function ($query) {
-                    $query->where('status', true);
+                    $query->where('status', true)
+                    ->with(['modifiers' => function ($productQuery) {
+                        $productQuery->where('status', true);
+                    }]);
                 },
                 'banners' => function ($query) {
                     $query->where('is_active', true);
                 },
-                'offer' => function ($query) {
+                'offers' => function ($query) {
                     $query->where('active', 1);
                 }
             ])->findOrFail($id);
