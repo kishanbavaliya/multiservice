@@ -143,6 +143,16 @@ class Restaurant extends Model
         return $this->hasMany(RestaurantProduct::class);
     }
 
+    public function servingSizes()
+    {
+        return $this->hasMany(RestaurantServingSize::class);
+    }
+
+    public function modifierGroups()
+    {
+        return $this->hasMany(RestaurantModifierGroup::class);
+    }
+
     public function banners()
     {
         return $this->hasMany(RestaurantBanner::class);
@@ -153,9 +163,9 @@ class Restaurant extends Model
         return $this->hasMany(MenuItem::class, 'restaurant_id', 'id');
     }
 
-    public function offer()
+    public function offers()
     {
-        return $this->hasOne(Offer::class, 'id', 'offer_id');
+        return $this->hasOne(Offer::class);
     }
 
     // Scopes

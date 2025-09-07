@@ -165,9 +165,12 @@ Route::prefix('restaurants')->group(function () {
     Route::get('/stats', [RestaurantController::class, 'getStats']);
     Route::get('/cuisine/{cuisineType}', [RestaurantController::class, 'getByCuisineType']);
     Route::get('/city/{city}', [RestaurantController::class, 'getByCity']);
+    Route::get('/popular-brands', [RestaurantController::class, 'getPopularBrands']);
     Route::get('/{id}', [RestaurantController::class, 'show']);
     Route::get('/{id}/menu', [FoodAppController::class, 'getRestaurantMenu']);
 });
+Route::get('/search', [RestaurantController::class, 'allSearch']);
+Route::get('/filter', [RestaurantController::class, 'filter']);
 
 // Test route to verify controller works
 Route::get('/test-restaurant', [RestaurantController::class, 'index']);

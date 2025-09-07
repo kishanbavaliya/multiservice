@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\RestaurantProduct;
 
 class RestaurantController extends Controller
 {
@@ -357,14 +358,12 @@ class RestaurantController extends Controller
                               $subQuery->where('is_active', true)
                                        ->with([
                                            'products' => function ($productQuery) {
-                                               $productQuery->where('is_available', true)
-                                                            ->where('is_active', true);
+                                               $productQuery->where('is_available', true);
                                            }
                                        ]);
                           },
                           'products' => function ($productQuery) {
-                              $productQuery->where('is_available', true)
-                                           ->where('is_active', true);
+                              $productQuery->where('is_available', true);
                           }
                       ]);
             },
@@ -394,7 +393,8 @@ class RestaurantController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Restaurant not found'
+                'message' => 'Restaurant not found',
+                'data' => $e->getMessage()
             ], 404);
         }
     }
@@ -663,5 +663,269 @@ class RestaurantController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+    /**
+     * Search restaurants with advanced filters
+     */
+    public function allSearch(Request $request): JsonResponse
+    {
+        try {
+            // ========== 0. Validation ==========
+            $validator = Validator::make($request->all(), [
+                'query' => 'required|string|min:2',
+                'city' => 'nullable|string',
+                'cuisine_type' => 'nullable|string',
+                'status' => 'nullable|string|in:active,inactive,suspended',
+                'delivery_available' => 'nullable|boolean',
+                'min_rating' => 'nullable|numeric|min:0|max:5',
+                'max_delivery_time' => 'nullable|integer|min:1',
+                'price_range' => 'nullable|string|in:low,medium,high',
+                'limit' => 'nullable|integer|min:1|max:100'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // ========== 1. Get request parameters ==========
+            $searchQuery = $request['query']; // required, safe to use array syntax
+            $limit = $request->has('limit') ? $request['limit'] : 20;
+
+            $city = $request->has('city') ? $request['city'] : null;
+            $cuisine_type = $request->has('cuisine_type') ? $request['cuisine_type'] : null;
+            $delivery_available = $request->has('delivery_available') ? $request->boolean('delivery_available') : null;
+            $min_rating = $request->has('min_rating') ? $request['min_rating'] : null;
+            $max_delivery_time = $request->has('max_delivery_time') ? $request['max_delivery_time'] : null;
+            $price_range = $request->has('price_range') ? $request['price_range'] : null;
+            // dd($searchQuery);
+            // ========== 2. Search Restaurants ==========
+            $restaurantQuery = Restaurant::where('status', 'active')
+                ->where('is_verified', 1)
+                ->where(function ($q) use ($searchQuery) {
+                    $q->where('name', 'like', "%{$searchQuery}%")
+                    ->orWhere('description', 'like', "%{$searchQuery}%")
+                    ->orWhere('cuisine_type', 'like', "%{$searchQuery}%")
+                    ->orWhere('city', 'like', "%{$searchQuery}%");
+                });
+     // dd($restaurantQuery->get());
+            // Apply filters if present
+            if ($city) {
+                $restaurantQuery->where('city', 'like', "%{$city}%");
+            }
+
+            if ($cuisine_type) {
+                $restaurantQuery->where('cuisine_type', 'like', "%{$cuisine_type}%");
+            }
+
+            if (!is_null($delivery_available)) {
+                $restaurantQuery->where('delivery_available', $delivery_available);
+            }
+
+            if (!is_null($min_rating)) {
+                $restaurantQuery->where('rating', '>=', $min_rating);
+            }
+
+            if (!is_null($max_delivery_time)) {
+                $restaurantQuery->where('max_delivery_time', '<=', $max_delivery_time);
+            }
+
+            if ($price_range) {
+                switch ($price_range) {
+                    case 'low':
+                        $restaurantQuery->where('delivery_fee', '<=', 2.99);
+                        break;
+                    case 'medium':
+                        $restaurantQuery->whereBetween('delivery_fee', [3.00, 5.99]);
+                        break;
+                    case 'high':
+                        $restaurantQuery->where('delivery_fee', '>=', 6.00);
+                        break;
+                }
+            }
+
+            $restaurants = $restaurantQuery
+                ->with(['categories' => function ($q) {
+                    $q->where('is_active', true)->limit(3);
+                }])
+                ->orderBy('rating', 'desc')
+                ->orderBy('total_reviews', 'desc')
+                ->limit($limit)
+                ->get();
+
+            // ========== 3. Search Dishes ==========
+            $dishes = RestaurantProduct::where('is_available', true)
+                ->where('name', 'like', "%{$searchQuery}%")
+                ->with(['restaurant' => function ($q) {
+                    $q->select('id', 'name', 'rating', 'max_delivery_time');
+                }])
+                ->limit($limit)
+                ->get();
+
+            // ========== 4. Response ==========
+            return response()->json([
+                'success' => true,
+                'message' => 'Search completed successfully',
+                'data' => [
+                    'restaurants' => $restaurants,
+                    'dishes' => $dishes,
+                    'total_restaurants' => $restaurants->count(),
+                    'total_dishes' => $dishes->count(),
+                    'search_query' => $searchQuery,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function filter(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'delivery_available' => 'nullable|boolean',
+                'free_delivery' => 'nullable|boolean',
+                'min_discount' => 'nullable|integer|min:0|max:100',
+                'offers' => 'nullable|boolean',
+                'top_rated' => 'nullable|boolean',
+                'price_level' => 'nullable|array',
+                'price_level.*' => 'integer',
+                'cuisine' => 'nullable|string',
+                'limit' => 'nullable|integer|min:1|max:100',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $query = Restaurant::with('offers')->where('status', 'active')->where('is_verified', true);
+
+            // Filter: delivery_available
+            if ($request->has('delivery_available')) {
+                $query->where('delivery_available', $request->boolean('delivery_available'));
+            }
+
+            // Filter: free_delivery
+            if ($request->has('free_delivery')) {
+                $query->where('delivery_fee', 0);
+            }
+
+            // Filter: offers
+            if ($request->has('offers')) {
+                $query->whereHas('offers', function ($q) {
+                    // $q->where('is_active', true);
+                });
+            }
+
+            // Filter: min_discount
+            // if ($request->has('min_discount')) {
+            //     $query->where('discount_percentage', '>=', $request->min_discount);
+            // }
+            if ($request->has('min_discount')) {
+                $query->whereHas('offers', function ($q) use ($request) {
+                    // $q->where('is_active', true)
+                    $q->where('discount_value', '>=', $request->min_discount);
+                });
+            }
+
+            // Filter: top_rated
+            if ($request->has('top_rated') && $request->boolean('top_rated')) {
+                $query->where('rating', '>=', 4.5);
+            }
+
+            // Filter: price_level (discount percentage)
+            if ($request->has('price_level')) {
+                $levels = is_array($request->price_level)
+                    ? $request->price_level
+                    : [$request->price_level];
+
+                $query->whereHas('offers', function ($q) use ($levels) {
+                    // $q->where('is_active', true)
+                    $q->whereIn('discount_value', $levels);
+                });
+            }
+
+            // Filter: cuisine
+            if ($request->has('cuisine')) {
+                $query->where('cuisine_type', 'like', "%{$request->cuisine}%");
+            }
+
+            $limit = $request->get('limit', 20);
+            switch ($request->get('sort_by')) {
+                case 'top_rated':
+                    $query->orderBy('rating', 'desc');
+                    break;
+
+                case 'delivery_time':
+                    $query->orderBy('max_delivery_time', 'asc'); // or 'delivery_time'
+                    break;
+
+                case 'cost_low_to_high':
+                    $query->with(['offers' => function ($q) {
+                        $q->orderBy('discount_value', 'asc');
+                    }]);
+                    break;
+
+                case 'cost_high_to_low':
+                    $query->with(['offers' => function ($q) {
+                        $q->orderBy('discount_value', 'desc');
+                    }]);
+                    break;
+                case 'most_popular':
+                    $query->orderBy('rating', 'desc'); // Assuming you track popularity
+                    break;
+
+                case 'recommended':
+                default:
+                    $query->orderBy('rating', 'desc'); // Fallback or logic for "recommended"
+                    break;
+            }
+
+            $restaurants = $query
+                ->orderBy('rating', 'desc')
+                ->limit($limit)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'restaurants' => $restaurants,
+                    'total' => $restaurants->count(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Filter failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getPopularBrands()
+    {
+        $brands = Restaurant::orderBy('rating', 'desc')
+            ->get();
+    
+        return response()->json([
+            'status' => true,
+            'message' => 'Popular brands fetched successfully',
+            'data' => $brands
+        ]);
     }
 }
