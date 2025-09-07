@@ -350,16 +350,24 @@ class RestaurantController extends Controller
     {
         try {
             $restaurant = Restaurant::with([
-                'categories' => function ($query) {
-                    $query->where('is_active', true);
-                },
-                'subcategories' => function ($query) {
-                    $query->where('is_active', true);
-                },
-                'products' => function ($query) {
-                    $query->where('is_available', true)
-                          ->where('is_active', true);
-                },
+            'categories' => function ($query) {
+                $query->where('is_active', true)
+                      ->with([
+                          'subcategories' => function ($subQuery) {
+                              $subQuery->where('is_active', true)
+                                       ->with([
+                                           'products' => function ($productQuery) {
+                                               $productQuery->where('is_available', true)
+                                                            ->where('is_active', true);
+                                           }
+                                       ]);
+                          },
+                          'products' => function ($productQuery) {
+                              $productQuery->where('is_available', true)
+                                           ->where('is_active', true);
+                          }
+                      ]);
+            },
                 'servingSizes' => function ($query) {
                     $query->where('status', true);
                 },
@@ -368,6 +376,9 @@ class RestaurantController extends Controller
                 },
                 'banners' => function ($query) {
                     $query->where('is_active', true);
+                },
+                'offer' => function ($query) {
+                    $query->where('active', 1);
                 }
             ])->findOrFail($id);
 
