@@ -349,6 +349,8 @@ Route::group(['middleware' => ['auth:sanctum', "user.active.check"]], function (
     Route::apiResource('orders', OrderController::class)->only('index', 'show', 'update');
     Route::middleware('throttle.order.api')->group(function () {
         Route::post('orders', [OrderController::class, 'store']);
+        Route::post('orders/from-cart', [OrderController::class, 'fromCart']);
+        Route::get('orders/history', [OrderController::class, 'history']);
     });
 
     Route::post('/track/order', [TrackOrderController::class, "track"]);

@@ -43,6 +43,9 @@ class RestaurantProductLivewire extends Component
     public $allow_out_of_stock_orders = false;
     public $allow_customization = false;
     public $sort_order = 0;
+    public $selected_modifier_group_ids = [];
+    public $available_modifier_groups = [];
+    public $selected_modifier_group_timestamps = [];
 
     // Filters and search
     public $search = '';
@@ -81,6 +84,7 @@ class RestaurantProductLivewire extends Component
         'dietary_info' => 'nullable|string',
         'stock_quantity' => 'nullable|integer|min:0',
         'sort_order' => 'integer|min:0',
+    'selected_modifier_group_ids' => 'nullable|array',
     ];
 
     public function mount()
@@ -192,6 +196,7 @@ class RestaurantProductLivewire extends Component
     {
         $this->resetForm();
         $this->isEditing = false;
+    $this->loadModifierGroups();
         $this->showModal = true;
     }
 
@@ -224,6 +229,19 @@ class RestaurantProductLivewire extends Component
         $this->allow_out_of_stock_orders = $product->allow_out_of_stock_orders;
         $this->allow_customization = $product->allow_customization;
         $this->sort_order = $product->sort_order;
+        // load selected modifier groups for this product
+        $this->selected_modifier_group_ids = $product->modifier_groups->pluck('id')->toArray();
+
+        // load available modifier groups for this restaurant so UI shows all groups
+        $this->loadModifierGroups();
+
+        // collect pivot timestamps for already-selected groups (if any)
+        $this->selected_modifier_group_timestamps = [];
+        foreach ($product->modifier_groups as $g) {
+            if (isset($g->pivot) && isset($g->pivot->created_at)) {
+                $this->selected_modifier_group_timestamps[$g->id] = (string) $g->pivot->created_at;
+            }
+        }
 
         $this->isEditing = true;
         $this->showModal = true;
@@ -271,11 +289,33 @@ class RestaurantProductLivewire extends Component
         if ($this->isEditing) {
             $product = RestaurantProduct::findOrFail($this->product_id);
             $product->update($data);
-            
+            // validate selected modifier groups belong to this restaurant
+            $selected = $this->selected_modifier_group_ids ?? [];
+            $validIds = \App\Models\RestaurantModifierGroup::where('restaurant_id', $this->restaurant_id)
+                ->whereIn('id', $selected)
+                ->pluck('id')
+                ->toArray();
+            if (count($selected) !== count($validIds)) {
+                session()->flash('error', 'Some selected modifier groups were invalid for the chosen restaurant and were ignored.');
+            }
+            // sync only valid groups
+            $product->modifier_groups()->sync($validIds);
+
             session()->flash('message', 'Product updated successfully!');
         } else {
             $product = RestaurantProduct::create($data);
-            
+            // validate selected modifier groups belong to this restaurant
+            $selected = $this->selected_modifier_group_ids ?? [];
+            $validIds = \App\Models\RestaurantModifierGroup::where('restaurant_id', $this->restaurant_id)
+                ->whereIn('id', $selected)
+                ->pluck('id')
+                ->toArray();
+            if (count($selected) !== count($validIds)) {
+                session()->flash('error', 'Some selected modifier groups were invalid for the chosen restaurant and were ignored.');
+            }
+            // sync only valid groups
+            $product->modifier_groups()->sync($validIds);
+
             session()->flash('message', 'Product created successfully!');
         }
 
@@ -367,13 +407,20 @@ class RestaurantProductLivewire extends Component
         $this->allow_out_of_stock_orders = false;
         $this->allow_customization = false;
         $this->sort_order = 0;
-        $this->resetValidation();
+    $this->selected_modifier_group_ids = [];
+    $this->available_modifier_groups = [];
+    $this->selected_modifier_group_timestamps = [];
+    $this->resetValidation();
     }
 
     public function updatedRestaurantId()
     {
         $this->category_id = '';
         $this->subcategory_id = '';
+    $this->loadModifierGroups();
+    // Clear any previously selected groups when changing restaurant
+    $this->selected_modifier_group_ids = [];
+    $this->selected_modifier_group_timestamps = [];
     }
 
     public function updatedCategoryId()
@@ -441,5 +488,14 @@ class RestaurantProductLivewire extends Component
                 ->get();
         }
         return collect();
+    }
+
+    private function loadModifierGroups()
+    {
+        if ($this->restaurant_id) {
+            $this->available_modifier_groups = \App\Models\RestaurantModifierGroup::where('restaurant_id', $this->restaurant_id)->active()->orderBy('name')->get();
+        } else {
+            $this->available_modifier_groups = [];
+        }
     }
 }
