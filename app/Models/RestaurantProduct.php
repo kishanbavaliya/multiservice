@@ -111,6 +111,11 @@ class RestaurantProduct extends Model
         return $this->belongsTo(RestaurantServingSize::class, 'serving_size_id');
     }
 
+    public function modifier_groups()
+    {
+    return $this->belongsToMany(RestaurantModifierGroup::class, 'restaurant_product_modifier_group', 'restaurant_product_id', 'modifier_group_id');
+    }
+
     // Scopes
     public function scopeAvailable($query)
     {

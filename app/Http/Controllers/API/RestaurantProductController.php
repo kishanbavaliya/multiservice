@@ -10,6 +10,7 @@ use App\Models\Restaurant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use App\Models\RestaurantModifierGroup;
 
 class RestaurantProductController extends Controller
 {
@@ -74,6 +75,21 @@ class RestaurantProductController extends Controller
     }
 
     /**
+     * Attach modifier groups and their modifiers to a product model instance.
+     */
+    private function attachModifierGroupsToProduct($product)
+    {
+        if (! $product) return;
+
+    $modifierGroupIds = $product->modifier_groups->pluck('id');
+        $modifierGroups = RestaurantModifierGroup::with(['modifiers' => function ($q) use ($product) {
+            return $q->where('restaurant_id', $product->restaurant_id)->active()->ordered();
+        }])->whereIn('id', $modifierGroupIds)->get();
+
+        $product->setRelation('modifier_groups', $modifierGroups);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -130,6 +146,9 @@ class RestaurantProductController extends Controller
     {
         $product = RestaurantProduct::with(['restaurant', 'category', 'subcategory'])
             ->findOrFail($id);
+
+        // attach modifier groups and modifiers
+        $this->attachModifierGroupsToProduct($product);
 
         return response()->json([
             'success' => true,
@@ -227,6 +246,11 @@ class RestaurantProductController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
+        // attach modifier groups for each product
+        foreach ($products as $product) {
+            $this->attachModifierGroupsToProduct($product);
+        }
+
         return response()->json([
             'success' => true,
             'data' => $products,
@@ -246,6 +270,10 @@ class RestaurantProductController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
+        foreach ($products as $product) {
+            $this->attachModifierGroupsToProduct($product);
+        }
+
         return response()->json([
             'success' => true,
             'data' => $products,
@@ -264,6 +292,10 @@ class RestaurantProductController extends Controller
             ->orderBy('sort_order', 'asc')
             ->orderBy('name', 'asc')
             ->get();
+
+        foreach ($products as $product) {
+            $this->attachModifierGroupsToProduct($product);
+        }
 
         return response()->json([
             'success' => true,
@@ -314,6 +346,10 @@ class RestaurantProductController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
+        foreach ($products as $product) {
+            $this->attachModifierGroupsToProduct($product);
+        }
+
         return response()->json([
             'success' => true,
             'data' => $products,
@@ -332,6 +368,10 @@ class RestaurantProductController extends Controller
             ->orderBy('sort_order', 'asc')
             ->orderBy('name', 'asc')
             ->get();
+
+        foreach ($products as $product) {
+            $this->attachModifierGroupsToProduct($product);
+        }
 
         return response()->json([
             'success' => true,
@@ -390,6 +430,10 @@ class RestaurantProductController extends Controller
         }
 
         $products = $query->orderBy('name', 'asc')->get();
+
+        foreach ($products as $product) {
+            $this->attachModifierGroupsToProduct($product);
+        }
 
         return response()->json([
             'success' => true,

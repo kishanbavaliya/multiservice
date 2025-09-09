@@ -294,6 +294,28 @@
                         </div>
                     </div>
 
+                    <!-- Modifier Groups -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Modifier Groups</label>
+                        @if(!empty($available_modifier_groups) && $available_modifier_groups->count())
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-auto border rounded p-2 bg-gray-50">
+                                @foreach($available_modifier_groups as $group)
+                                    <label class="flex items-center space-x-2 text-sm">
+                                        <input type="checkbox" wire:model="selected_modifier_group_ids" value="{{ $group->id }}" class="rounded border-gray-300 text-blue-600">
+                                        <div class="flex items-center">
+                                            <span>{{ $group->name }} @if($group->isRequired()) <span class="text-xs text-red-500">(Required)</span> @endif</span>
+                                            @if(!empty($selected_modifier_group_timestamps[$group->id]))
+                                                <span class="ml-2 text-xs text-gray-500">Selected: {{ $selected_modifier_group_timestamps[$group->id] }}</span>
+                                            @endif
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-sm text-gray-500">No modifier groups found for the selected restaurant.</div>
+                        @endif
+                    </div>
+
                     <!-- Image Upload -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
